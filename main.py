@@ -5,6 +5,7 @@ from deep_translator import GoogleTranslator
 
 from db import DB
 
+bot = Bot('')
 def en_uz(text):
     tr_text = GoogleTranslator(source='en',target='uz').translate(text)
     return tr_text
@@ -36,5 +37,31 @@ def translate(update:Update, context:CallbackContext):
         tr_text = ru_uz(text)
     else:
         tr_text = uz_ru(text)
+    db.save()
     bot.send_message(chat_id, tr_text)
+
+def start(update:Update,context:CallbackContext):
+    bot=context.bot 
+    chat_id=update.message.chat.id
+    db = DB()
+    db.starting(chat_id)
+    db.save()
+    bot.send_message(chat_id,'Matn kirgizing')
+
+def uzen(update:Update,context:CallbackContext):
+    bot=context.bot 
+    chat_id=update.message.chat.id
+    db = DB()
+    db.change(chat_id,'uz-en')
+    db.save()
+    bot.send_message(chat_id,'Matn kirgizing')
     
+
+updater=Updater('')
+
+updater.dispatcher.add_handler(CommandHandler('start',start))
+updater.dispatcher.add_handler(CommandHandler('uzen',uzen))
+updater.dispatcher.add_handler(MessageHandler(Filters.text,translate))
+
+updater.start_polling()
+updater.idle()
