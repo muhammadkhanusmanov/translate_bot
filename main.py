@@ -33,20 +33,36 @@ def translate(update:Update, context:CallbackContext):
     db = DB()
     a = db.check_admins(chat_id)
     msg=False
+    addd = False
+    remd = False
+    addc = False
+    removec = False
     if a:
         ruxsat = db.ruxsatlar(chat_id)
         msg = ruxsat['msg']
-    if a and msg:
-        users = db.allusers()
+        addd = ruxsat['addd']
+        remd = ruxsat['removed']
+        addc = ruxsat['addc']
+        removec = ruxsat['removec']
         if msg:
-            i=0
-            for user in users:
-                try:
-                    bot.send_message(user, message.text)
-                    i+=1
-                except:
-                    pass
-            bot.send_message(chat_id,f'{i} ta foydalanuvchiga xabar muvafaqiyatli yuborildi')
+            users = db.allusers()
+            if msg:
+                i=0
+                for user in users:
+                    try:
+                        bot.send_message(user, message.text)
+                        i+=1
+                    except:
+                        pass
+                bot.send_message(chat_id,f'{i} ta foydalanuvchiga xabar muvafaqiyatli yuborildi')
+        elif addd and message.text[:6]=='admin+':
+            db.add(message.text[6:],'admin',None)
+            try:
+                usr = bot.get_chat(message.text[6:])
+                bot.send_message(chat_id,f'Admin qo\'shildi✅\n\nuser id : {message.text[6:]}\n\nname: {usr.first_name}\n\nusername: {usr.username}')
+            except:
+                bot.send_message(chat_id,f'Admin qo\'shildi✅\nUser haqida malumotlar topilmadi')
+
         
     else:
         text = update.message.text
@@ -61,6 +77,7 @@ def translate(update:Update, context:CallbackContext):
             tr_text = uz_ru(text)
         db.save()
         bot.send_message(chat_id, f'`{tr_text}`', parse_mode=ParseMode.MARKDOWN)
+    db.save()
 
 def start(update:Update,context:CallbackContext):
     bot=context.bot 
@@ -126,12 +143,19 @@ def admin_command(update:Update, context:CallbackContext):
     if a:
         db.rmsg(chat_id,False)
         db.rfwd(chat_id,False)
+        db.changer(chat_id,'addd')
+        db.changer(chat_id,'addc')
+        db.changer(chat_id,'removed')
+        db.changer(chat_id,'removec')
         if command == 'sendmsg':
             db.rmsg(chat_id,True)
             bot.send_message(chat_id=chat_id, text='Barcha foydalanuvchilarga yuborish uchun text xabar yozing')
         elif command == 'sendfwd':
             db.rfwd(chat_id,True)
             bot.send_message(chat_id,'Barcha foydalanuvchilarga *Forward message* yuborish uchun xabarni ulashing',parse_mode=ParseMode.MARKDOWN)
+        elif command == 'addadmin':
+            db.changer(chat_id,'addd',True)
+            bot.send_message(chat_id=chat_id, text="Yangi admin qo'shish uchun user_idisini quyidagicha kiriting:\n\nadmin+user_id")
     db.save()
 
             
