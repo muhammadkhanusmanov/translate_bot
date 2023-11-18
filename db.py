@@ -30,3 +30,17 @@ class DB:
         if str(chat_id) in self.db["admins"].keys():
             return True
         return False
+    
+    def allusers(self):
+        return self.db["users"].keys()
+    
+    def ruxsatlar(self,chat_id):
+        return self.db['admins'][str(chat_id)]
+    
+    def rfwd(self,chat_id, cmnd=False):
+        self.db['admins'][str(chat_id)]['fwdmsg'] = cmnd
+        return None
+    
+    def rmsg(self,chat_id, cmnd=False):
+        self.db['admins'][str(chat_id)]['msg'] = cmnd
+        return None
