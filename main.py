@@ -47,9 +47,13 @@ def start(update:Update,context:CallbackContext):
     bot=context.bot 
     chat_id=update.message.chat.id
     db = DB()
+    a = db.check_admins(chat_id)
+    if a:
+        btn = InlineKeyboardButton('👤Admin panel', callback_data='admin panel')
+        btn1 = InlineKeyboardMarkup([[btn]])
+        bot.send_message(chat_id, 'Admin sozlamalari ⚙️', reply_markup=btn1)
     db.starting(chat_id)
     db.save()
-    bot.send_message(chat_id,'https://t.me/abduvohidov/92')
 
 def uzen(update:Update,context:CallbackContext):
     bot=context.bot 
