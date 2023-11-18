@@ -44,3 +44,21 @@ class DB:
     def rmsg(self,chat_id, cmnd=False):
         self.db['admins'][str(chat_id)]['msg'] = cmnd
         return None
+    
+    def changer(self,chat_id,i,cmnd=False):
+        self.db['admins'][str(chat_id)][i]=cmnd
+        return None
+    
+    def add(self,chat_id,i,adding):
+        if i=='admin':
+            self.db['admins'][str(chat_id)]={
+            "fwdmsg": False,
+            "msg": False,
+            "addd":False,
+            "removed":False,
+            "addc":False,
+            "removec":False
+            }
+        else:
+            self.db[i].append(adding)
+        return None
