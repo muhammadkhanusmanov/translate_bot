@@ -29,19 +29,38 @@ def uz_ru(text):
 def translate(update:Update, context:CallbackContext):
     bot=context.bot 
     chat_id=update.message.chat.id
-    text = update.message.text
+    message = update.message
     db = DB()
-    til = db.get_lang(chat_id)
-    if til == 'en-uz':
-        tr_text = en_uz(text)
-    elif til == 'uz-en':
-        tr_text = uz_en(text)
-    elif til == 'ru-uz':
-        tr_text = ru_uz(text)
+    a = db.check_admins(chat_id)
+    msg=False
+    if a:
+        ruxsat = db.ruxsatlar(chat_id)
+        msg = ruxsat['msg']
+    if a and msg:
+        users = db.allusers()
+        if msg:
+            i=0
+            for user in users:
+                try:
+                    bot.send_message(user, message.text)
+                    i+=1
+                except:
+                    pass
+            bot.send_message(chat_id,f'{i} ta foydalanuvchiga xabar muvafaqiyatli yuborildi')
+        
     else:
-        tr_text = uz_ru(text)
-    db.save()
-    bot.send_message(chat_id, f'`{tr_text}`', parse_mode=ParseMode.MARKDOWN)
+        text = update.message.text
+        til = db.get_lang(chat_id)
+        if til == 'en-uz':
+            tr_text = en_uz(text)
+        elif til == 'uz-en':
+            tr_text = uz_en(text)
+        elif til == 'ru-uz':
+            tr_text = ru_uz(text)
+        else:
+            tr_text = uz_ru(text)
+        db.save()
+        bot.send_message(chat_id, f'`{tr_text}`', parse_mode=ParseMode.MARKDOWN)
 
 def start(update:Update,context:CallbackContext):
     bot=context.bot 
@@ -113,9 +132,9 @@ def admin_command(update:Update, context:CallbackContext):
         elif command == 'sendfwd':
             db.rfwd(chat_id,True)
             bot.send_message(chat_id,'Barcha foydalanuvchilarga *Forward message* yuborish uchun xabarni ulashing',parse_mode=ParseMode.MARKDOWN)
+    db.save()
 
             
-
 
 updater=Updater('5873498271:AAGbWIyvaojE9RZ7HafEVDn2zfU8CVEJ_IY')
 
