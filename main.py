@@ -95,6 +95,27 @@ def adminpanel(update:Update, context:CallbackContext):
         bot.sendMessage(chat_id, 'Bad request')
     db.save()
 
+def admin_command(update:Update, context:CallbackContext):
+    query = update.callback_query
+    chat_id = query.message.chat_id
+    msg = query.message.message_id
+    bot=context.bot
+    command = query.data.split(' ')[1]
+    db = DB()
+    a = db.check_admins(chat_id)
+    bot.delete_message(chat_id=chat_id, message_id=msg)
+    if a:
+        db.rmsg(chat_id,False)
+        db.rfwd(chat_id,False)
+        if command == 'sendmsg':
+            db.rmsg(chat_id,True)
+            bot.send_message(chat_id=chat_id, text='Barcha foydalanuvchilarga yuborish uchun text xabar yozing')
+        elif command == 'sendfwd':
+            db.rfwd(chat_id,True)
+            bot.send_message(chat_id,'Barcha foydalanuvchilarga *Forward message* yuborish uchun xabarni ulashing',parse_mode=ParseMode.MARKDOWN)
+
+            
+
 
 updater=Updater('5873498271:AAGbWIyvaojE9RZ7HafEVDn2zfU8CVEJ_IY')
 
@@ -103,6 +124,7 @@ updater.dispatcher.add_handler(CommandHandler('uzen',uzen))
 updater.dispatcher.add_handler(CommandHandler('enuz',enuz))
 updater.dispatcher.add_handler(CallbackQueryHandler(adminpanel, pattern='admin'))
 updater.dispatcher.add_handler(MessageHandler(Filters.text,translate))
+updater.dispatcher.add_handler(CallbackQueryHandler(admin_command, pattern='command'))
 
 updater.start_polling()
 updater.idle()
