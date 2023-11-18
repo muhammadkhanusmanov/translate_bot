@@ -1,11 +1,14 @@
 from telegram.ext import Updater,CommandHandler,CallbackContext,MessageHandler,Filters,CallbackQueryHandler
-from telegram import Bot,Update,ReplyKeyboardMarkup,KeyboardButton,InlineKeyboardMarkup,InlineKeyboardButton,ChatAdministratorRights
+from telegram import (
+    Bot,Update,ReplyKeyboardMarkup,KeyboardButton,InlineKeyboardMarkup,
+    InlineKeyboardButton,ChatAdministratorRights,ParseMode
+    )
 
 from deep_translator import GoogleTranslator
 
 from db import DB
 
-bot = Bot('')
+bot = Bot('5873498271:AAGbWIyvaojE9RZ7HafEVDn2zfU8CVEJ_IY')
 def en_uz(text):
     tr_text = GoogleTranslator(source='en',target='uz').translate(text)
     return tr_text
@@ -38,7 +41,7 @@ def translate(update:Update, context:CallbackContext):
     else:
         tr_text = uz_ru(text)
     db.save()
-    bot.send_message(chat_id, tr_text)
+    bot.send_message(chat_id, f'`{tr_text}`', parse_mode=ParseMode.MARKDOWN)
 
 def start(update:Update,context:CallbackContext):
     bot=context.bot 
@@ -46,7 +49,7 @@ def start(update:Update,context:CallbackContext):
     db = DB()
     db.starting(chat_id)
     db.save()
-    bot.send_message(chat_id,'Matn kirgizing')
+    bot.send_message(chat_id,'https://t.me/abduvohidov/92')
 
 def uzen(update:Update,context:CallbackContext):
     bot=context.bot 
@@ -54,13 +57,25 @@ def uzen(update:Update,context:CallbackContext):
     db = DB()
     db.change(chat_id,'uz-en')
     db.save()
-    bot.send_message(chat_id,'Matn kirgizing')
+    bot.send_message(chat_id,'Tarjima uchun matn kirgizing')
+
+def enuz(update:Update, context:CallbackContext):
+    bot=context.bot 
+    chat_id=update.message.chat.id
+    db = DB()
+    db.change(chat_id,'en-uz')
+    db.save()
+    bot.send_message(chat_id,'Enter text for translation', parse_mode=ParseMode.MARKDOWN)
+
+# def adminpanel(update:Update, context:CallbackContext):
+
     
 
-updater=Updater('')
+updater=Updater('5873498271:AAGbWIyvaojE9RZ7HafEVDn2zfU8CVEJ_IY')
 
 updater.dispatcher.add_handler(CommandHandler('start',start))
 updater.dispatcher.add_handler(CommandHandler('uzen',uzen))
+updater.dispatcher.add_handler(CommandHandler('enuz',enuz))
 updater.dispatcher.add_handler(MessageHandler(Filters.text,translate))
 
 updater.start_polling()
