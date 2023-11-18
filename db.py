@@ -22,3 +22,11 @@ class DB:
     def change(self,chat_id,til):
         self.db["users"][str(chat_id)] = til
         return None
+    
+    def get_lang(self,chat_id):
+        return self.db["users"][str(chat_id)]
+    
+    def check_admins(self,chat_id):
+        if str(chat_id) in self.db["admins"].keys():
+            return True
+        return False
