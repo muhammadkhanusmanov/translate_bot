@@ -67,9 +67,6 @@ class DB:
         self.db['admins'].pop(str(chat_id))
         return None
     
-    def alladmins(self):
-        return self.db['admins'].keys()
-    
     def channel(self,username,cmd):
         if cmd=='delete':
             try:
@@ -83,3 +80,8 @@ class DB:
                 return True
             else:
                 return False
+    def channels(self):
+        return self.db['channels']
+    
+    def alladmins(self):
+        return self.db['admins'].keys()
