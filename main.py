@@ -17,108 +17,93 @@ def tekshir(chat_id,bot,channel):
 bot = Bot('5873498271:AAGbWIyvaojE9RZ7HafEVDn2zfU8CVEJ_IY')
 def en_uz(text):
     tr_text = GoogleTranslator(source='en',target='uz').translate(text)
-    return tr_text
+    if tr_text==text:
+        tr_text = GoogleTranslator(source='uz',target='en').translate(text)
+        return tr_text
+    else:
+        return tr_text
 
-def uz_en(text):
-    tr_text = GoogleTranslator(source='uz',target='en').translate(text)
-    return tr_text
 
-def ru_uz(text):
-    tr_text = GoogleTranslator(source='ru',target='uz').translate(text)
-    return tr_text
-
-def uz_ru(text):
-    tr_text = GoogleTranslator(source='uz',target='ru').translate(text)
-    return tr_text
 
 
 def translate(update:Update, context:CallbackContext):
     bot=context.bot 
-    chat_id=update.message.chat.id
-    message = update.message
-    db = DB()
-    a = db.check_admins(chat_id)
-    msg=False
-    addd = False
-    remd = False
-    addc = False
-    removec = False
-    if a:
-        ruxsat = db.ruxsatlar(chat_id)
-        msg = ruxsat['msg']
-        addd = ruxsat['addd']
-        remd = ruxsat['removed']
-        addc = ruxsat['addc']
-        removec = ruxsat['removec']
-        if msg:
-            users = db.allusers()
+    try:
+        chat_id=update.message.chat.id
+        message = update.message
+        db = DB()
+        a = db.check_admins(chat_id)
+        msg=False
+        addd = False
+        remd = False
+        addc = False
+        removec = False
+        if a:
+            ruxsat = db.ruxsatlar(chat_id)
+            msg = ruxsat['msg']
+            addd = ruxsat['addd']
+            remd = ruxsat['removed']
+            addc = ruxsat['addc']
+            removec = ruxsat['removec']
             if msg:
-                i=0
-                for user in users:
-                    try:
-                        bot.send_message(user, message.text)
-                        i+=1
-                    except:
-                        pass
-                bot.send_message(chat_id,f'{i} ta foydalanuvchiga xabar muvafaqiyatli yuborildi')
-        elif addd and message.text[:6]=='admin+':
-            db.add(message.text[6:],'admin',None)
-            try:
-                usr = bot.get_chat(message.text[6:])
-                bot.send_message(chat_id,f'Admin qo\'shildi✅\n\nuser id : {message.text[6:]}\n\nname: {usr.first_name}\n\nusername: {usr.username}')
-            except:
-                bot.send_message(chat_id,f'Admin qo\'shildi✅\nUser haqida malumotlar topilmadi')
-        elif remd and message.text[:6]=='admin-':
-            try:
-                db.delete(message.text[6:])
-                usr = bot.get_chat(message.text[6:])
-                bot.send_message(chat_id,f'Admin o\'chirildi✅\n\nuser id : {message.text[6:]}\n\nname: {usr.first_name}\n\nusername: {usr.username}')
-            except:
-                bot.send_message(chat_id,'Admin o\'chirishda xatolik bo\'lishi mumkin tekshirib ko\'ring')
-        elif addc and message.text[:8]=='channel+':
-            q = db.channel(message.text[8:],'add')
-            if q:
+                users = db.allusers()
+                if msg:
+                    i=0
+                    for user in users:
+                        try:
+                            bot.send_message(f'{user}', message.text)
+                            i+=1
+                        except:
+                            pass
+                    bot.send_message(chat_id,f'{i} ta foydalanuvchiga xabar muvafaqiyatli yuborildi')
+            elif addd and message.text[:6]=='admin+':
+                db.add(message.text[6:],'admin',None)
                 try:
-                    chan1=bot.getChatMember(message.text[8:],chat_id)['status']
-                    bot.sendMessage(chat_id,'Chat muvafaqiyatli qo\'shildi✅')
+                    usr = bot.get_chat(message.text[6:])
+                    bot.send_message(chat_id,f'Admin qo\'shildi✅\n\nuser id : {message.text[6:]}\n\nname: {usr.first_name}\n\nusername: {usr.username}')
                 except:
-                    bot.sendMessage(chat_id,'Kanal qo\'shishda xatolik tekshirib qayta urinib ko\'ring')
-                    q=db.channel(message.text[8:],'delete')
+                    bot.send_message(chat_id,f'Admin qo\'shildi✅\nUser haqida malumotlar topilmadi')
+            elif remd and message.text[:6]=='admin-':
+                try:
+                    db.delete(message.text[6:])
+                    usr = bot.get_chat(message.text[6:])
+                    bot.send_message(chat_id,f'Admin o\'chirildi✅\n\nuser id : {message.text[6:]}\n\nname: {usr.first_name}\n\nusername: {usr.username}')
+                except:
+                    bot.send_message(chat_id,'Admin o\'chirishda xatolik bo\'lishi mumkin tekshirib ko\'ring')
+            elif addc and message.text[:8]=='channel+':
+                q = db.channel(message.text[8:],'add')
+                if q:
+                    try:
+                        chan1=bot.getChatMember(message.text[8:],chat_id)['status']
+                        bot.sendMessage(chat_id,'Chat muvafaqiyatli qo\'shildi✅')
+                    except:
+                        bot.sendMessage(chat_id,'Kanal qo\'shishda xatolik tekshirib qayta urinib ko\'ring')
+                        q=db.channel(message.text[8:],'delete')
+            elif removec and message.text[:8]=='channel-':
+                q=db.channel(message.text[8:],'delete')
+                if q:
+                    bot.sendMessage(chat_id,'Kanal muvafaqiyatli o\'chirildi')
+                else:
+                    bot.sendMessage(chat_id,'Kanal o\'chirishda xatolik')
+                
+            else:
+                text = update.message.text
+                tr_text=en_uz(text)
+                db.save()
+                bot.send_message(chat_id, f'`{tr_text}`', parse_mode=ParseMode.MARKDOWN)
         else:
             text = update.message.text
-            til = db.get_lang(chat_id)
-            if til == 'en-uz':
-                tr_text = en_uz(text)
-            elif til == 'uz-en':
-                tr_text = uz_en(text)
-            elif til == 'ru-uz':
-                tr_text = ru_uz(text)
-            else:
-                tr_text = uz_ru(text)
+            tr_text=en_uz(text)
             db.save()
             bot.send_message(chat_id, f'`{tr_text}`', parse_mode=ParseMode.MARKDOWN)
-
-
-        
-    else:
-        text = update.message.text
-        til = db.get_lang(chat_id)
-        if til == 'en-uz':
-            tr_text = en_uz(text)
-        elif til == 'uz-en':
-            tr_text = uz_en(text)
-        elif til == 'ru-uz':
-            tr_text = ru_uz(text)
-        else:
-            tr_text = uz_ru(text)
         db.save()
-        bot.send_message(chat_id, f'`{tr_text}`', parse_mode=ParseMode.MARKDOWN)
-    db.save()
+    except:
+        pass
 
 def start(update:Update,context:CallbackContext):
     bot=context.bot 
     chat_id=update.message.chat.id
-    print(update.message)
+    tp = update.message.chat.type
     db = DB()
     a = db.check_admins(chat_id)
     if a:
@@ -126,6 +111,7 @@ def start(update:Update,context:CallbackContext):
         btn1 = InlineKeyboardMarkup([[btn]])
         bot.send_message(chat_id, 'Admin sozlamalari ⚙️', reply_markup=btn1)
     db.starting(chat_id)
+    
     db.save()
 
 def uzen(update:Update,context:CallbackContext):
@@ -199,6 +185,27 @@ def admin_command(update:Update, context:CallbackContext):
         elif command == 'addchannel':
             db.changer(chat_id,'addc',True)
             bot.send_message(chat_id=chat_id, text="Botga majburiy obuna qo'shish uchun birinchi navbatda botni kanalga dmin qiling va quyidagicha kiriting kanal usernameni:\n\nchannel+username")
+        elif command == "dltchannel":
+            db.changer(chat_id,'removec',True)
+            bot.send_message(chat_id=chat_id, text="Majburiy obuna ro'yxatidan kanalni chiqarib tashlash uchun quyidagicha kiriting kanal usernameni:\n\nchannel-username")
+        elif command == 'list':
+            channels = db.channels()
+            if len(channels)!=0:
+                text = 'Majburiy obuna uchun kanallar:\n'
+                for channel in channels:
+                    text+=f'*{channel}*\n'
+                bot.sendMessage(chat_id,text,parse_mode=ParseMode.MARKDOWN)
+            else:
+                bot.sendMessage(chat_id,'Majburiy obuna uchun hech narsa topilmadi',parse_mode=ParseMode.MARKDOWN)
+            admins = db.alladmins()
+            text = 'Adminlar:\n\n'
+            for admin in admins:
+                try:
+                    usr = bot.get_chat(admin)
+                    text += f'User id: `{usr.id}`\nname: `{usr.first_name}`\nusername: `{usr.username}`\n\n'
+                except:
+                    text += f'User id: `{admin}`'
+            bot.sendMessage(chat_id,text,parse_mode=ParseMode.MARKDOWN)
     db.save()
 
             
