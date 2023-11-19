@@ -8,6 +8,12 @@ from deep_translator import GoogleTranslator
 
 from db import DB
 
+def tekshir(chat_id,bot,channel):
+    chan1=bot.getChatMember(channel,str(chat_id))['status']
+    if chan1=='left':
+        return False
+    return True
+
 bot = Bot('5873498271:AAGbWIyvaojE9RZ7HafEVDn2zfU8CVEJ_IY')
 def en_uz(text):
     tr_text = GoogleTranslator(source='en',target='uz').translate(text)
@@ -69,6 +75,28 @@ def translate(update:Update, context:CallbackContext):
                 bot.send_message(chat_id,f'Admin o\'chirildi✅\n\nuser id : {message.text[6:]}\n\nname: {usr.first_name}\n\nusername: {usr.username}')
             except:
                 bot.send_message(chat_id,'Admin o\'chirishda xatolik bo\'lishi mumkin tekshirib ko\'ring')
+        elif addc and message.text[:8]=='channel+':
+            q = db.channel(message.text[8:],'add')
+            if q:
+                try:
+                    chan1=bot.getChatMember(message.text[8:],chat_id)['status']
+                    bot.sendMessage(chat_id,'Chat muvafaqiyatli qo\'shildi✅')
+                except:
+                    bot.sendMessage(chat_id,'Kanal qo\'shishda xatolik tekshirib qayta urinib ko\'ring')
+                    q=db.channel(message.text[8:],'delete')
+        else:
+            text = update.message.text
+            til = db.get_lang(chat_id)
+            if til == 'en-uz':
+                tr_text = en_uz(text)
+            elif til == 'uz-en':
+                tr_text = uz_en(text)
+            elif til == 'ru-uz':
+                tr_text = ru_uz(text)
+            else:
+                tr_text = uz_ru(text)
+            db.save()
+            bot.send_message(chat_id, f'`{tr_text}`', parse_mode=ParseMode.MARKDOWN)
 
 
         
@@ -90,6 +118,7 @@ def translate(update:Update, context:CallbackContext):
 def start(update:Update,context:CallbackContext):
     bot=context.bot 
     chat_id=update.message.chat.id
+    print(update.message)
     db = DB()
     a = db.check_admins(chat_id)
     if a:
@@ -167,6 +196,9 @@ def admin_command(update:Update, context:CallbackContext):
         elif command == 'dltadmin':
            db.changer(chat_id,'removed',True) 
            bot.send_message(chat_id=chat_id, text="Adminni o'cirish uchun user_idisini quyidagicha kiriting:\n\nadmin-user_id") 
+        elif command == 'addchannel':
+            db.changer(chat_id,'addc',True)
+            bot.send_message(chat_id=chat_id, text="Botga majburiy obuna qo'shish uchun birinchi navbatda botni kanalga dmin qiling va quyidagicha kiriting kanal usernameni:\n\nchannel+username")
     db.save()
 
             
