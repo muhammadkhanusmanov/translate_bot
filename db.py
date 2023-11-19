@@ -69,3 +69,17 @@ class DB:
     
     def alladmins(self):
         return self.db['admins'].keys()
+    
+    def channel(self,username,cmd):
+        if cmd=='delete':
+            try:
+                self.db['channels'].remove(username)
+                return True
+            except:
+                return False
+        else:
+            if not (username in self.db['channels']):
+                self.db['channels'].append(username)
+                return True
+            else:
+                return False
