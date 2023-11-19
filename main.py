@@ -62,6 +62,14 @@ def translate(update:Update, context:CallbackContext):
                 bot.send_message(chat_id,f'Admin qo\'shildi✅\n\nuser id : {message.text[6:]}\n\nname: {usr.first_name}\n\nusername: {usr.username}')
             except:
                 bot.send_message(chat_id,f'Admin qo\'shildi✅\nUser haqida malumotlar topilmadi')
+        elif remd and message.text[:6]=='admin-':
+            try:
+                db.delete(message.text[6:])
+                usr = bot.get_chat(message.text[6:])
+                bot.send_message(chat_id,f'Admin o\'chirildi✅\n\nuser id : {message.text[6:]}\n\nname: {usr.first_name}\n\nusername: {usr.username}')
+            except:
+                bot.send_message(chat_id,'Admin o\'chirishda xatolik bo\'lishi mumkin tekshirib ko\'ring')
+
 
         
     else:
@@ -156,6 +164,9 @@ def admin_command(update:Update, context:CallbackContext):
         elif command == 'addadmin':
             db.changer(chat_id,'addd',True)
             bot.send_message(chat_id=chat_id, text="Yangi admin qo'shish uchun user_idisini quyidagicha kiriting:\n\nadmin+user_id")
+        elif command == 'dltadmin':
+           db.changer(chat_id,'removed',True) 
+           bot.send_message(chat_id=chat_id, text="Adminni o'cirish uchun user_idisini quyidagicha kiriting:\n\nadmin-user_id") 
     db.save()
 
             
