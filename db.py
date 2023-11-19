@@ -62,3 +62,10 @@ class DB:
         else:
             self.db[i].append(adding)
         return None
+    
+    def delete(self, chat_id):
+        self.db['admins'].pop(str(chat_id))
+        return None
+    
+    def alladmins(self):
+        return self.db['admins'].keys()
