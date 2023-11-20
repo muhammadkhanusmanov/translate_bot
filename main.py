@@ -17,21 +17,24 @@ def tekshir(chat_id,bot,channel):
 bot = Bot('5873498271:AAGbWIyvaojE9RZ7HafEVDn2zfU8CVEJ_IY')
 def en_uz(text):
     tr_text = GoogleTranslator(source='en',target='uz').translate(text)
-    if tr_text==text:
-        tr_text = GoogleTranslator(source='uz',target='en').translate(text)
-        return tr_text
-    else:
-        return tr_text
-
+    tr_text1 = GoogleTranslator(source='uz',target='en').translate(text)
+    return [tr_text,tr_text1]
 
 
 
 def translate(update:Update, context:CallbackContext):
     bot=context.bot 
+    group_id='1'
     try:
-        chat_id=update.message.chat.id
-        message = update.message
         db = DB()
+        chat_id=str(update.message.chat.id)
+        if chat_id[0]=='-':
+            groups = db.groups()
+            group_id = chat_id
+            if not(group_id in groups):
+                db.addgroup(group_id)   
+            chat_id=update.message.from_user.id
+        message = update.message
         a = db.check_admins(chat_id)
         msg=False
         addd = False
@@ -79,7 +82,7 @@ def translate(update:Update, context:CallbackContext):
                     except:
                         bot.sendMessage(chat_id,'Kanal qo\'shishda xatolik tekshirib qayta urinib ko\'ring')
                         q=db.channel(message.text[8:],'delete')
-            elif removec and message.text[:8]=='channel-':
+            elif (removec and message.text[:8]=='channel-'):
                 q=db.channel(message.text[8:],'delete')
                 if q:
                     bot.sendMessage(chat_id,'Kanal muvafaqiyatli o\'chirildi')
@@ -87,22 +90,51 @@ def translate(update:Update, context:CallbackContext):
                     bot.sendMessage(chat_id,'Kanal o\'chirishda xatolik')
                 
             else:
-                text = update.message.text
-                tr_text=en_uz(text)
-                db.save()
-                bot.send_message(chat_id, f'`{tr_text}`', parse_mode=ParseMode.MARKDOWN)
+                if group_id!='1':
+                    text = update.message.text
+                    tr_text=en_uz(text)
+                    bot.send_message(group_id, f'*En*\n`{tr_text[1]}`\n\n*Uz*\n`{tr_text[0]}`', parse_mode=ParseMode.MARKDOWN)
+                else:
+                    text = update.message.text
+                    tr_text=en_uz(text)
+                    bot.send_message(chat_id, f'*En*\n`{tr_text[1]}`\n\n*Uz*\n`{tr_text[0]}`', parse_mode=ParseMode.MARKDOWN)
         else:
-            text = update.message.text
-            tr_text=en_uz(text)
-            db.save()
-            bot.send_message(chat_id, f'`{tr_text}`', parse_mode=ParseMode.MARKDOWN)
-        db.save()
+            channels = db.channels()
+            if len(channels)!=0:
+                for channel in channels:
+                    m = tekshir(chat_id,bot,channel)
+                    if not(m):
+                        bot.send_message(chat_id,'Bot ishlashi uchun qayta /start bosing')
+                        db.save()
+                        return None
+                if group_id!='1':
+                    text = update.message.text
+                    tr_text=en_uz(text)
+                    bot.send_message(group_id, f'*En*\n`{tr_text[1]}`\n\n*Uz*\n`{tr_text[0]}`', parse_mode=ParseMode.MARKDOWN)
+                else:
+                    text = update.message.text
+                    tr_text=en_uz(text)
+                    bot.send_message(chat_id, f'*En*\n`{tr_text[1]}`\n\n*Uz*\n`{tr_text[0]}`', parse_mode=ParseMode.MARKDOWN)
+            else:
+                if group_id!='1':
+                    text = update.message.text
+                    tr_text=en_uz(text)
+                    bot.send_message(group_id, f'*En*\n`{tr_text[1]}`\n\n*Uz*\n`{tr_text[0]}`', parse_mode=ParseMode.MARKDOWN)
+                else:
+                    text = update.message.text
+                    tr_text=en_uz(text)
+                    bot.send_message(chat_id, f'*En*\n`{tr_text[1]}`\n\n*Uz*\n`{tr_text[0]}`', parse_mode=ParseMode.MARKDOWN)
+
+
     except:
         pass
+    db.save()
 
 def start(update:Update,context:CallbackContext):
     bot=context.bot 
-    chat_id=update.message.chat.id
+    chat_id=str(update.message.chat.id)
+    if chat_id[0]=='-':
+        return None
     tp = update.message.chat.type
     db = DB()
     a = db.check_admins(chat_id)
@@ -111,7 +143,18 @@ def start(update:Update,context:CallbackContext):
         btn1 = InlineKeyboardMarkup([[btn]])
         bot.send_message(chat_id, 'Admin sozlamalari ⚙️', reply_markup=btn1)
     db.starting(chat_id)
-    
+    bot.send_message(chat_id, f'User: `{chat_id}`\n\n *Assalomu alaykum tarjimon botga xush kelibsiz*' ,parse_mode=ParseMode.MARKDOWN)
+    channels = db.channels()
+    admins = db.alladmins()
+    if channels!=0 and not(str(chat_id) in admins):
+        btn=[]
+        for channel in channels:
+            btn1 = InlineKeyboardButton('Kanal ➕', callback_data=f'obuna {channel[:3]}',url=f'https://t.me/{channel[1:]}')
+            btn.append([btn1])
+        btn1 = InlineKeyboardButton('Tekshirish✅', callback_data='check')
+        btn.append([btn1])
+        btn = InlineKeyboardMarkup(btn)
+        bot.sendMessage(chat_id,'Botdan to\'liq foydalanish uchun obunani amalga oshiring',reply_markup=btn)
     db.save()
 
 def uzen(update:Update,context:CallbackContext):
@@ -173,9 +216,6 @@ def admin_command(update:Update, context:CallbackContext):
         if command == 'sendmsg':
             db.rmsg(chat_id,True)
             bot.send_message(chat_id=chat_id, text='Barcha foydalanuvchilarga yuborish uchun text xabar yozing')
-        elif command == 'sendfwd':
-            db.rfwd(chat_id,True)
-            bot.send_message(chat_id,'Barcha foydalanuvchilarga *Forward message* yuborish uchun xabarni ulashing',parse_mode=ParseMode.MARKDOWN)
         elif command == 'addadmin':
             db.changer(chat_id,'addd',True)
             bot.send_message(chat_id=chat_id, text="Yangi admin qo'shish uchun user_idisini quyidagicha kiriting:\n\nadmin+user_id")
@@ -206,8 +246,58 @@ def admin_command(update:Update, context:CallbackContext):
                 except:
                     text += f'User id: `{admin}`'
             bot.sendMessage(chat_id,text,parse_mode=ParseMode.MARKDOWN)
+        elif command == 'statistik':
+            users = db.allusers()
+            groups = db.groups()
+            admins = db.alladmins()
+            kanals = db.channels()
+            text = f'*Bot statistikasi*\n\nAdminlar: {len(admins)}\nUserlar: {len(users)-len(groups)}\nGuruhlar: {len(groups)}\nMajburiy kanallar: {len(kanals)}'
+            bot.sendMessage(chat_id,text,parse_mode=ParseMode.MARKDOWN)
+        elif command == 'sendfwd':
+            bot.sendMessage(chat_id,"*Forward message* yuborish uchun avval yubormoqchi bo'lgan xabaringizni botga yuboring va shu habarni reply qilib *send* xabarini jo'nating",parse_mode=ParseMode.MARKDOWN)
     db.save()
 
+def checking(update:Update, context:CallbackContext):
+    query = update.callback_query
+    chat_id = query.message.chat_id
+    msg = query.message.message_id
+    bot=context.bot
+    bot.delete_message(chat_id=chat_id, message_id=msg)
+    db=DB()
+    kanallar = db.channels()
+    db.save()
+    for kanal in kanallar:
+        q = tekshir(chat_id,bot,kanal)
+        if not(q):
+            bot.send_message(chat_id,'Obunada bo\'lishda xatolik qayta urinib ko\'ring')
+            return None
+    bot.send_message(chat_id,'Obuna muvafaqqiyatli amalga oshirildi. Botdan foydalanishingiz mumkin.')
+
+def forwarding(update:Update, context:CallbackContext):
+    try:
+        chat_id = update.message.chat_id
+        text = update.message.text
+        original_message = update.message.reply_to_message
+        db = DB()
+        users = db.allusers()
+        admins=db.alladmins()
+        if not(str(chat_id) in admins and text=='send'):
+            db.save()
+            return None
+        if original_message:
+            i=0
+            for user in users:
+                try:
+                    context.bot.forward_message(chat_id=user, from_chat_id=original_message.chat_id, message_id=original_message.message_id)
+                    i+=1
+                except:
+                    pass
+            bot.send_message(chat_id,f'{i} ta userga xabar muvafaqiyatli yuborildi')
+        else:
+            update.message.reply_text("Iltimos, forward qilinayotgan xabarga reply qiling.")
+        db.save()
+    except:
+        pass
             
 
 updater=Updater('5873498271:AAGbWIyvaojE9RZ7HafEVDn2zfU8CVEJ_IY')
@@ -215,9 +305,12 @@ updater=Updater('5873498271:AAGbWIyvaojE9RZ7HafEVDn2zfU8CVEJ_IY')
 updater.dispatcher.add_handler(CommandHandler('start',start))
 updater.dispatcher.add_handler(CommandHandler('uzen',uzen))
 updater.dispatcher.add_handler(CommandHandler('enuz',enuz))
+updater.dispatcher.add_handler(MessageHandler(Filters.reply,forwarding))
 updater.dispatcher.add_handler(CallbackQueryHandler(adminpanel, pattern='admin'))
 updater.dispatcher.add_handler(MessageHandler(Filters.text,translate))
 updater.dispatcher.add_handler(CallbackQueryHandler(admin_command, pattern='command'))
+updater.dispatcher.add_handler(CallbackQueryHandler(checking, pattern='check'))
+
 
 updater.start_polling()
 updater.idle()
