@@ -85,3 +85,10 @@ class DB:
     
     def alladmins(self):
         return self.db['admins'].keys()
+    
+    def groups(self):
+        return self.db['groups']
+    
+    def addgroup(self,id):
+        self.db['groups'].append(str(id))
+        return None
