@@ -42,6 +42,12 @@ def translate(update:Update, context:CallbackContext):
         addc = False
         removec = False
         if a:
+            if group_id[0]=='-':
+                text = update.message.text
+                tr_text=en_uz(text)
+                bot.send_message(group_id, f'*En*\n`{tr_text[1]}`\n\n*Uz*\n`{tr_text[0]}`', parse_mode=ParseMode.MARKDOWN)
+                db.save()
+                return None
             ruxsat = db.ruxsatlar(chat_id)
             msg = ruxsat['msg']
             addd = ruxsat['addd']
