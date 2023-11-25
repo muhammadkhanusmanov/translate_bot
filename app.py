@@ -3,12 +3,14 @@ import os
 from telegram import Bot, Update
 from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters,CallbackQueryHandler
 from main import *
+from flask_cors import CORS
 
 TOKEN = os.environ["Token"]
 
 bot = Bot(TOKEN)
 
 app = Flask(__name__)
+cors=CORS(app)
 
 @app.route('/webhook', methods=["POST", "GET"])
 def hello():
@@ -34,3 +36,7 @@ def hello():
         
         dispacher.process_update(update)
         return 'ok'
+    
+# to start server at specific host and port
+if __name__ == '__main__':
+    app.run(host='0.0.0.0',port=5000)
